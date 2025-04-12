@@ -9,8 +9,8 @@ st.title("📊 Business & Data Quality Dashboard")
 
 # Replace with actual GitHub raw URLs
 data_sources = {
-    "business_metrics": "https://raw.githubusercontent.com/Harshapendli/streamlit-visualization/main/business_metrics.csv",
-    "data_quality": "https://raw.githubusercontent.com/Harshapendli/streamlit-visualization/main/data_quality.csv"
+    "business_metrics": "https://raw.githubusercontent.com/Harshapendli/streamlit-visualization/main/incorrect_products.csv",
+    "data_quality": "https://raw.githubusercontent.com/Harshapendli/streamlit-visualization/main/incorrect_products.csv"
 }
 
 @st.cache_data
