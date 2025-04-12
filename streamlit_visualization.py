@@ -111,7 +111,7 @@ def show_data_quality_dashboard():
         st.subheader("🧾 Word Map: Invalid Categories Only")
 
         # Filter rows with "Invalid category" reason only
-        invalid_cat_df = df[df['validation_reason'].str.contains("Invalid category", case=False, na=False)]
+        invalid_cat_df = df[df['validation_reason']!="Invalid category"]
         invalid_cat_counts = invalid_cat_df['category'].value_counts()
         category_freq = invalid_cat_counts.to_dict()
 
