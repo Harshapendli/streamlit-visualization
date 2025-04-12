@@ -86,18 +86,19 @@ def show_data_quality_dashboard():
 
     except Exception as e:
         st.error(f"🚨 Failed to load data from GitHub: {e}")
-        st.markdown(\"\"\"\n
-        - Please make sure the file exists and is accessible at the raw GitHub URL.\n
-        - Make sure the CSV is properly formatted.\n
-        - You can test by copying this link and opening it in your browser.\n
-        \"\"\")
-
+        st.markdown(
+            """
+            - Please make sure the file exists and is accessible at the raw GitHub URL.  
+            - Make sure the CSV is properly formatted (equal columns, quoted text).  
+            - You can test by copying this link and opening it in your browser.  
+            """
+        )
 
 # ---------- BUSINESS INSIGHTS PAGE ----------
 def show_business_insights():
-    st.title(\"📈 Business Insights Report\")
+    st.title("📈 Business Insights Report")
 
-    METRICS_URL = \"https://raw.githubusercontent.com/Harshapendli/streamlit-visualization/main/business_metrics.csv\"
+    METRICS_URL = "https://raw.githubusercontent.com/Harshapendli/streamlit-visualization/main/business_metrics.csv"
 
     @st.cache_data
     def load_metrics(url):
@@ -108,37 +109,37 @@ def show_business_insights():
 
         # Customers
         if {'customer_id', 'customer_name', 'total_spent'}.issubset(df.columns):
-            st.subheader(\"🏅 Top 5 Customers by Total Spend\")
+            st.subheader("🏅 Top 5 Customers by Total Spend")
             top_customers = df.groupby(['customer_id', 'customer_name'])['total_spent'].sum().nlargest(5).reset_index()
             st.dataframe(top_customers)
             st.plotly_chart(px.bar(top_customers, x='customer_name', y='total_spent', color='customer_name'), use_container_width=True)
 
         # Products
         if {'product_id', 'product_name', 'total_revenue'}.issubset(df.columns):
-            st.subheader(\"🛍️ Top 5 Products by Revenue\")
+            st.subheader("🛍️ Top 5 Products by Revenue")
             top_products = df.groupby(['product_id', 'product_name'])['total_revenue'].sum().nlargest(5).reset_index()
             st.dataframe(top_products)
             st.plotly_chart(px.bar(top_products, x='product_name', y='total_revenue', color='product_name'), use_container_width=True)
 
         # Shipping
         if {'carrier', 'on_time_deliveries'}.issubset(df.columns):
-            st.subheader(\"🚚 Top 5 Shipping Carriers by On-Time Deliveries\")
+            st.subheader("🚚 Top 5 Shipping Carriers by On-Time Deliveries")
             top_carriers = df.groupby('carrier')['on_time_deliveries'].sum().nlargest(5).reset_index()
             st.dataframe(top_carriers)
             st.plotly_chart(px.bar(top_carriers, x='carrier', y='on_time_deliveries', color='carrier'), use_container_width=True)
 
         # Refunds
         if {'reason', 'total_refund_amount'}.issubset(df.columns):
-            st.subheader(\"💸 Top 5 Return Reason Analysis\")
+            st.subheader("💸 Top 5 Return Reason Analysis")
             top_refunds = df.groupby('reason')['total_refund_amount'].sum().nlargest(5).reset_index()
             st.dataframe(top_refunds)
             st.plotly_chart(px.pie(top_refunds, names='reason', values='total_refund_amount'), use_container_width=True)
 
     except Exception as e:
-        st.error(f\"Failed to load business metrics: {e}\")
+        st.error(f"Failed to load business metrics: {e}")
 
-# ---------- ROUTE HANDLER ----------
-if query == \"incorrect_products\":
+# ---------- ROUTING ----------
+if query == "incorrect_products":
     show_data_quality_dashboard()
 else:
     show_business_insights()
