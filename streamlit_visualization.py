@@ -16,7 +16,7 @@ def show_business_insights():
     
     # Read from local CSV file
     try:
-        df = pd.read_csv("refunds.csv")  # Replace with your actual file path
+        df = pd.read_csv("valid_refunds.csv")  # Replace with your actual file path
     
         # Ensure required columns exist
         if {'reason', 'refund_amount'}.issubset(df.columns):
