@@ -93,7 +93,7 @@ def show_data_quality_dashboard():
 
         if not cat_counts.empty:
             cat_counts['Count'] = (cat_counts['Proportion'] * total_rows).round().astype(int)
-            fig2 = px.pie(cat_counts, names='Category', values='Count', title='Product Category (>1%)', hole=0.4)
+            fig2 = px.pie(cat_counts, names='Category', values='Count', title='Product Category  ', hole=0.4)
             st.plotly_chart(fig2, use_container_width=True)
         else:
             st.info("No categories exceed 1% of total entries.")
@@ -112,7 +112,7 @@ def show_data_quality_dashboard():
         else:
             st.success("No missing values found.")
 
-        st.subheader("✅ Valid vs Invalid Products by Category (>1% only)")
+        st.subheader("Invalid Products by Category ")
         df['is_valid'] = df['validation_reason'].isnull()
         status_group = df.groupby(['category', 'is_valid']).size().reset_index(name='count')
         status_group = status_group[status_group['count'] / total_rows > 0.01]
@@ -120,7 +120,7 @@ def show_data_quality_dashboard():
 
         if not status_group.empty:
             fig4 = px.bar(status_group, x='category', y='count', color='Status', barmode='group',
-                          title="Valid vs Invalid Products by Category (>1%)")
+                          title="Valid vs Invalid Products by Category  ")
             st.plotly_chart(fig4, use_container_width=True)
         else:
             st.info("No valid/invalid groups exceed 1% of the data.")
