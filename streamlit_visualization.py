@@ -6,10 +6,15 @@ st.set_page_config(page_title="Product Data Quality Dashboard", layout="wide")
 
 st.title("📦 Product Data Quality Dashboard")
 
-uploaded_file = st.file_uploader("Upload `products.csv` with validation issues", type=["csv"])
+# 🔗 URL to your GitHub raw CSV file
+GITHUB_CSV_URL = "https://raw.githubusercontent.com/your-username/your-repo/main/data/products.csv"
 
-if uploaded_file:
-    df = pd.read_csv(uploaded_file)
+@st.cache_data
+def load_data(url):
+    return pd.read_csv(url)
+
+try:
+    df = load_data(GITHUB_CSV_URL)
 
     st.subheader("🧾 Raw Data Preview")
     st.dataframe(df)
@@ -65,8 +70,6 @@ if uploaded_file:
     st.subheader("✅ Valid vs Invalid Products by Category (>1% only)")
     df['is_valid'] = df['validation_reason'].isnull()
     status_group = df.groupby(['category', 'is_valid']).size().reset_index(name='count')
-
-    # Add only rows where (count / total) > 1%
     status_group = status_group[status_group['count'] / total_rows > 0.01]
     status_group['Status'] = status_group['is_valid'].map({True: 'Valid', False: 'Invalid'})
 
@@ -76,3 +79,6 @@ if uploaded_file:
         st.plotly_chart(fig4, use_container_width=True)
     else:
         st.info("No valid/invalid groups exceed 1% of the data.")
+
+except Exception as e:
+    st.error(f"Failed to load data from GitHub: {e}")
