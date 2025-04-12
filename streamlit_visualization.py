@@ -10,35 +10,32 @@ st.set_page_config(page_title="Business Insights & Product Quality", layout="wid
 page = st.sidebar.radio("Go to", ["📈 Business Insights", "📦 Product Data Quality"])
 
 # ---------------- Business Insights ----------------
+st.set_page_config(page_title="Top 5 Return Reasons", layout="wide")
+
 def show_business_insights():
-    st.set_page_config(page_title="Top 5 Return Reasons", layout="wide")
     st.title("💸 Top 5 Return Reason Analysis")
     
-    # Read from local CSV file
     try:
         df = pd.read_csv("valid_refunds.csv")  # Replace with your actual file path
-    
-        # Ensure required columns exist
+
         if {'reason', 'refund_amount'}.issubset(df.columns):
-            # Clean and convert refund_amount
             df = df.dropna(subset=['reason', 'refund_amount'])
             df['refund_amount'] = pd.to_numeric(df['refund_amount'], errors='coerce')
             df = df.dropna(subset=['refund_amount'])
-    
-            # Group and summarize top 5 reasons
+
             top_reasons = df.groupby('reason')['refund_amount'].sum().sort_values(ascending=False).head(5).reset_index()
-    
-            # Plot
+
             fig = px.bar(top_reasons, x='reason', y='refund_amount', color='reason',
                          title="Top 5 Return Reasons by Total Refund Amount", height=400)
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("The file must contain 'reason' and 'refund_amount' columns.")
-    
+
     except FileNotFoundError:
-        st.error("🚫 File 'refunds.csv' not found. Please check the file path.")
+        st.error("🚫 File 'valid_refunds.csv' not found. Please check the file path.")
     except Exception as e:
         st.error(f"❌ Error reading file: {e}")
+
     # METRICS_URL = "https://raw.githubusercontent.com/Harshapendli/streamlit-visualization/main/business_metrics.csv"
 
     # @st.cache_data
