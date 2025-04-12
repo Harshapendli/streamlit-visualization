@@ -17,10 +17,16 @@ if uploaded_file is not None:
     st.write(df.head())
     
     # Visualization
-    st.subheader("Line Chart")
-    st.line_chart(df['column_name'])
-    
-    st.subheader("Histogram")
-    fig, ax = plt.subplots()
-    ax.hist(df['numeric_column'])
-    st.pyplot(fig)
+    if 'column_name' in df.columns:
+        st.subheader("Line Chart")
+        st.line_chart(df['column_name'])
+    else:
+        st.warning("Column 'column_name' not found in the data.")
+
+    if 'numeric_column' in df.columns:
+        st.subheader("Histogram")
+        fig, ax = plt.subplots()
+        ax.hist(df['numeric_column'])
+        st.pyplot(fig)
+    else:
+        st.warning("Column 'numeric_column' not found in the data.")
