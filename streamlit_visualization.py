@@ -7,7 +7,7 @@ st.set_page_config(page_title="Product Data Quality Dashboard", layout="wide")
 st.title("📦 Product Data Quality Dashboard")
 
 # 🔗 URL to your GitHub raw CSV file
-GITHUB_CSV_URL = "https://raw.githubusercontent.com/your-username/your-repo/main/data/products.csv"
+GITHUB_CSV_URL = "https://raw.githubusercontent.com/your-username/your-repo/main/data/incorrect_products.csv"
 
 @st.cache_data
 def load_data(url):
