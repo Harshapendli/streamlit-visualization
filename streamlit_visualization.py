@@ -1,107 +1,93 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from datetime import datetime
 
-st.set_page_config(page_title="Business & Data Quality Insights", layout="wide")
+st.set_page_config(page_title="Product Data Quality Dashboard", layout="wide")
 
-st.title("📊 Business & Data Quality Dashboard")
+st.title("📦 Product Data Quality Dashboard")
 
-# Replace with actual GitHub raw URLs
-data_sources = {
-    "business_metrics": "https://raw.githubusercontent.com/Harshapendli/streamlit-visualization/main/incorrect_products.csv",
-    "data_quality": "https://raw.githubusercontent.com/Harshapendli/streamlit-visualization/main/incorrect_products.csv"
-}
+# ✅ Correct raw GitHub URL (must be raw.githubusercontent.com)
+GITHUB_CSV_URL = "https://raw.githubusercontent.com/Harshapendli/streamlit-visualization/main/incorrect_products.csv"
 
 @st.cache_data
-def load_csv(url):
-    return pd.read_csv(url, engine='python', on_bad_lines='warn')
+def load_data(url):
+    try:
+        return pd.read_csv(url, engine='python', on_bad_lines='warn')
+    except Exception as e:
+        st.stop()
+        st.error(f"Error reading CSV: {e}")
 
-# Load datasets
-biz_df = load_csv(data_sources["business_metrics"])
-dq_df = load_csv(data_sources["data_quality"])
+try:
+    df = load_data(GITHUB_CSV_URL)
 
-# Convert date if available
-if 'date' in biz_df.columns:
-    biz_df['date'] = pd.to_datetime(biz_df['date'], errors='coerce')
+    st.subheader("🧾 Raw Data Preview")
+    st.dataframe(df)
 
-st.header("📊 Business Insights Report")
+    # Strip whitespace from category
+    df['category'] = df['category'].astype(str).str.strip()
 
-# Top 5 Customers
-st.subheader("🏅 Top 5 Customers by Total Spend")
-if 'customer_name' in biz_df.columns:
-    top_customers = biz_df.groupby(['customer_id', 'customer_name'])['total_spent'].sum().nlargest(5).reset_index()
-    st.dataframe(top_customers)
-    fig_cust = px.bar(top_customers, x='customer_name', y='total_spent', color='customer_name')
-    st.plotly_chart(fig_cust, use_container_width=True)
+    total_rows = len(df)
 
-# Top 5 Products
-st.subheader("🛍️ Top 5 Products by Revenue")
-if 'product_name' in biz_df.columns:
-    top_products = biz_df.groupby(['product_id', 'product_name'])['total_revenue'].sum().nlargest(5).reset_index()
-    st.dataframe(top_products)
-    fig_prod = px.bar(top_products, x='product_name', y='total_revenue', color='product_name')
-    st.plotly_chart(fig_prod, use_container_width=True)
+    # ---- 1. Validation Issue Count (filtered to >1%) ----
+    st.subheader("❗ Frequent Validation Issues")
+    val_counts = df['validation_reason'].value_counts(normalize=True).reset_index()
+    val_counts.columns = ['Validation Reason', 'Proportion']
+    val_counts = val_counts[val_counts['Proportion'] > 0.01]
 
-# Shipping Performance
-st.subheader("🚚 Top 5 Shipping Carriers by On-Time Deliveries")
-if 'carrier' in biz_df.columns:
-    shipping = biz_df.groupby('carrier')['on_time_deliveries'].sum().nlargest(5).reset_index()
-    st.dataframe(shipping)
-    fig_ship = px.bar(shipping, x='carrier', y='on_time_deliveries', color='carrier')
-    st.plotly_chart(fig_ship, use_container_width=True)
-
-# Refund Reasons
-st.subheader("💸 Top 5 Return Reasons")
-if 'reason' in biz_df.columns:
-    refunds = biz_df.groupby('reason')['total_refund_amount'].sum().nlargest(5).reset_index()
-    st.dataframe(refunds)
-    fig_ref = px.pie(refunds, names='reason', values='total_refund_amount', title='Top Refund Reasons')
-    st.plotly_chart(fig_ref, use_container_width=True)
-
-st.header("🧮 Data Quality Report")
-
-# Invalid records by dataset
-st.subheader("📦 Invalid Record Counts")
-if not dq_df.empty:
-    st.dataframe(dq_df)
-    fig_dq = px.bar(dq_df, x='dataset', y='invalid_count', color='dataset', title="Invalid Records per Dataset")
-    st.plotly_chart(fig_dq, use_container_width=True)
-
-# Summarized issues
-st.subheader("🔍 Issue Summary by Type")
-if 'issue_type' in dq_df.columns:
-    issue_summary = dq_df.groupby('issue_type')['invalid_count'].sum().reset_index()
-    fig_issues = px.bar(issue_summary, x='issue_type', y='invalid_count', color='issue_type', title='Summarized Issues by Type')
-    st.plotly_chart(fig_issues, use_container_width=True)
-
-# Bonus Dashboard
-st.header("📈 Interactive Dashboard")
-if 'date' in biz_df.columns:
-    st.subheader("📅 Filter by Date Range")
-    min_date = biz_df['date'].min()
-    max_date = biz_df['date'].max()
-    date_range = st.date_input("Select date range", [min_date, max_date])
-
-    if len(date_range) == 2:
-        filtered = biz_df[(biz_df['date'] >= pd.to_datetime(date_range[0])) & (biz_df['date'] <= pd.to_datetime(date_range[1]))]
-
-        st.subheader("📊 Spend Over Time")
-        if not filtered.empty:
-            spend_time = filtered.groupby('date')['total_spent'].sum().reset_index()
-            fig_spend = px.line(spend_time, x='date', y='total_spent', title='Total Spend Over Time')
-            st.plotly_chart(fig_spend, use_container_width=True)
-
-        st.subheader("📦 Shipping Performance Over Time")
-        if 'on_time_deliveries' in filtered.columns:
-            ship_time = filtered.groupby('date')['on_time_deliveries'].sum().reset_index()
-            fig_ship_time = px.line(ship_time, x='date', y='on_time_deliveries', title='On-Time Deliveries Over Time')
-            st.plotly_chart(fig_ship_time, use_container_width=True)
-
-        st.subheader("💰 Refund Amounts Over Time")
-        if 'total_refund_amount' in filtered.columns:
-            refund_time = filtered.groupby('date')['total_refund_amount'].sum().reset_index()
-            fig_refund_time = px.line(refund_time, x='date', y='total_refund_amount', title='Refunds Over Time')
-            st.plotly_chart(fig_refund_time, use_container_width=True)
+    if not val_counts.empty:
+        val_counts['Count'] = (val_counts['Proportion'] * total_rows).round().astype(int)
+        fig1 = px.bar(val_counts, x='Validation Reason', y='Count', color='Validation Reason',
+                      title='Validation Issues (>1% of records)', height=400)
+        st.plotly_chart(fig1, use_container_width=True)
     else:
-        st.warning("Please select a valid date range.")
+        st.info("No validation issues exceed 1% threshold.")
+
+    # ---- 2. Category Distribution Pie Chart (filtered to >1%) ----
+    st.subheader("📊 Category Distribution (Major Categories Only)")
+    cat_counts = df['category'].value_counts(normalize=True).reset_index()
+    cat_counts.columns = ['Category', 'Proportion']
+    cat_counts = cat_counts[cat_counts['Proportion'] > 0.01]
+
+    if not cat_counts.empty:
+        cat_counts['Count'] = (cat_counts['Proportion'] * total_rows).round().astype(int)
+        fig2 = px.pie(cat_counts, names='Category', values='Count', title='Product Category (>1%)', hole=0.4)
+        st.plotly_chart(fig2, use_container_width=True)
+    else:
+        st.info("No categories exceed 1% of total entries.")
+
+    # ---- 3. Missing Value Summary ----
+    st.subheader("🧼 Missing Value Summary")
+    missing_data = df.isnull().sum()
+    missing_df = pd.DataFrame({
+        'Column': missing_data.index,
+        'Missing Count': missing_data.values,
+        'Percent Missing': (missing_data.values / total_rows * 100).round(2)
+    })
+    missing_df = missing_df[missing_df['Missing Count'] > 0]
+
+    if not missing_df.empty:
+        st.table(missing_df)
+    else:
+        st.success("No missing values found.")
+
+    # ---- 4. Valid vs Invalid Products Grouped by Category ----
+    st.subheader("✅ Valid vs Invalid Products by Category (>1% only)")
+    df['is_valid'] = df['validation_reason'].isnull()
+    status_group = df.groupby(['category', 'is_valid']).size().reset_index(name='count')
+    status_group = status_group[status_group['count'] / total_rows > 0.01]
+    status_group['Status'] = status_group['is_valid'].map({True: 'Valid', False: 'Invalid'})
+
+    if not status_group.empty:
+        fig4 = px.bar(status_group, x='category', y='count', color='Status', barmode='group',
+                      title="Valid vs Invalid Products by Category (>1%)")
+        st.plotly_chart(fig4, use_container_width=True)
+    else:
+        st.info("No valid/invalid groups exceed 1% of the data.")
+
+except Exception as e:
+    st.error(f"🚨 Failed to load data from GitHub: {e}")
+    st.markdown("""
+    - Please make sure the file exists and is accessible at the raw GitHub URL.
+    - Make sure the CSV is properly formatted (equal columns, quoted text).
+    - You can test by copying this link and opening it in your browser.
+    """)
