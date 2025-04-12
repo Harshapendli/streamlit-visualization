@@ -120,7 +120,7 @@ def show_data_quality_dashboard():
 
         if not status_group.empty:
             fig4 = px.bar(status_group, x='category', y='count', color='Status', barmode='group',
-                          title="Valid vs Invalid Products by Category  ")
+                          title="Invalid Products by Category  ")
             st.plotly_chart(fig4, use_container_width=True)
         else:
             st.info("No valid/invalid groups exceed 1% of the data.")
