@@ -112,7 +112,7 @@ def show_data_quality_dashboard():
 
         # Filter rows with "Invalid category" reason only
         valid_Categories = ["Electronics", "Furniture", "Clothing", "Beauty", "Sports"];
-        invalid_cat_df = df[df['category'].rstrip() not in valid_Categories]
+        invalid_cat_df = df[df['category'] not in valid_Categories]
         invalid_cat_counts = invalid_cat_df['category'].value_counts()
         category_freq = invalid_cat_counts.to_dict()
 
