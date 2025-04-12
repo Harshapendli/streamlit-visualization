@@ -107,12 +107,13 @@ def show_data_quality_dashboard():
         else:
             st.success("No missing values found.")
 
-        # 🔍 Word Map Visualization for Invalid Categories
-        st.subheader("🧾 Invalid Products by Category (Word Map)")
+        # 🔍 Word Map Visualization for Invalid Categories ONLY
+        st.subheader("🧾 Word Map: Invalid Categories Only")
 
-        invalid_df = df[df['validation_reason'].notnull()]
-        invalid_counts = invalid_df['category'].value_counts()
-        category_freq = invalid_counts.to_dict()
+        # Filter rows with "Invalid category" reason only
+        invalid_cat_df = df[df['validation_reason'].str.contains("Invalid category", case=False, na=False)]
+        invalid_cat_counts = invalid_cat_df['category'].value_counts()
+        category_freq = invalid_cat_counts.to_dict()
 
         if category_freq:
             wc = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(category_freq)
@@ -121,7 +122,7 @@ def show_data_quality_dashboard():
             ax.axis("off")
             st.pyplot(fig)
         else:
-            st.info("No invalid products to display in word map.")
+            st.info("No invalid categories found to generate word map.")
 
         # ✅ Raw Data Preview moved to the end
         st.subheader("📄 Raw Data Preview")
