@@ -105,18 +105,26 @@ def show_data_quality_dashboard():
         else:
             st.success("No missing values found.")
 
-        st.subheader("Invalid Products by Category")
-        df['is_valid'] = df['validation_reason'].isnull()
-        status_group = df.groupby(['category', 'is_valid']).size().reset_index(name='count')
-        status_group = status_group[status_group['count'] / total_rows > 0.01]
-        status_group['Status'] = status_group['is_valid'].map({True: 'Valid', False: 'Invalid'})
+        st.subheader("🧾 Invalid Products by Category (Word Map)")
 
-        if not status_group.empty:
-            fig4 = px.bar(status_group, x='category', y='count', color='Status', barmode='group',
-                          title="Invalid Products by Category")
-            st.plotly_chart(fig4, use_container_width=True)
-        else:
-            st.info("No valid/invalid groups exceed 1% of the data.")
+# Filter only invalid records
+invalid_df = df[df['validation_reason'].notnull()]
+
+# Create category frequency dictionary
+invalid_counts = invalid_df['category'].value_counts()
+category_freq = invalid_counts.to_dict()
+
+if category_freq:
+    # Generate word cloud
+    wc = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(category_freq)
+
+    # Show the word cloud using matplotlib
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.imshow(wc, interpolation='bilinear')
+    ax.axis("off")
+    st.pyplot(fig)
+else:
+    st.info("No invalid products to display in word map.")
 
         # ✅ Raw Data Preview moved to the end
         st.subheader("🧾 Raw Data Preview")
