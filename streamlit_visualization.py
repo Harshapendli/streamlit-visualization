@@ -81,7 +81,7 @@ def show_data_quality_dashboard():
         if not val_counts.empty:
             val_counts['Count'] = (val_counts['Proportion'] * total_rows).round().astype(int)
             fig1 = px.bar(val_counts, x='Validation Reason', y='Count', color='Validation Reason',
-                          title='Validation Issues (>1% of records)', height=400)
+                          title='Validation Issues', height=400)
             st.plotly_chart(fig1, use_container_width=True)
         else:
             st.info("No validation issues exceed 1% threshold.")
