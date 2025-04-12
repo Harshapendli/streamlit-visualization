@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Business Insights & Product Quality", layout="wide")
 
@@ -105,29 +107,24 @@ def show_data_quality_dashboard():
         else:
             st.success("No missing values found.")
 
+        # 🔍 Word Map Visualization for Invalid Categories
         st.subheader("🧾 Invalid Products by Category (Word Map)")
 
-        # Filter only invalid records
         invalid_df = df[df['validation_reason'].notnull()]
-
-        # Create category frequency dictionary
         invalid_counts = invalid_df['category'].value_counts()
         category_freq = invalid_counts.to_dict()
 
         if category_freq:
-            # Generate word cloud
             wc = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(category_freq)
-
-            # Show the word cloud using matplotlib
             fig, ax = plt.subplots(figsize=(10, 5))
             ax.imshow(wc, interpolation='bilinear')
             ax.axis("off")
             st.pyplot(fig)
-       else:
-           st.info("No invalid products to display in word map.")
+        else:
+            st.info("No invalid products to display in word map.")
 
         # ✅ Raw Data Preview moved to the end
-        st.subheader("🧾 Raw Data Preview")
+        st.subheader("📄 Raw Data Preview")
         st.dataframe(df)
 
     except Exception as e:
