@@ -11,43 +11,69 @@ page = st.sidebar.radio("Go to", ["📈 Business Insights", "📦 Product Data Q
 
 # ---------------- Business Insights ----------------
 def show_business_insights():
-    st.title("📈 Business Insights Report")
-
-    METRICS_URL = "https://raw.githubusercontent.com/Harshapendli/streamlit-visualization/main/business_metrics.csv"
-
-    @st.cache_data
-    def load_metrics(url):
-        return pd.read_csv(url)
-
+    st.set_page_config(page_title="Top 5 Return Reasons", layout="wide")
+    st.title("💸 Top 5 Return Reason Analysis")
+    
+    # Read from local CSV file
     try:
-        df = load_metrics(METRICS_URL)
-
-        if {'customer_id', 'customer_name', 'total_spent'}.issubset(df.columns):
-            st.subheader("🏅 Top 5 Customers by Total Spend")
-            top_customers = df.groupby(['customer_id', 'customer_name'])['total_spent'].sum().nlargest(5).reset_index()
-            st.dataframe(top_customers)
-            st.plotly_chart(px.bar(top_customers, x='customer_name', y='total_spent', color='customer_name'), use_container_width=True)
-
-        if {'product_id', 'product_name', 'total_revenue'}.issubset(df.columns):
-            st.subheader("🛍️ Top 5 Products by Revenue")
-            top_products = df.groupby(['product_id', 'product_name'])['total_revenue'].sum().nlargest(5).reset_index()
-            st.dataframe(top_products)
-            st.plotly_chart(px.bar(top_products, x='product_name', y='total_revenue', color='product_name'), use_container_width=True)
-
-        if {'carrier', 'on_time_deliveries'}.issubset(df.columns):
-            st.subheader("🚚 Top 5 Shipping Carriers by On-Time Deliveries")
-            top_carriers = df.groupby('carrier')['on_time_deliveries'].sum().nlargest(5).reset_index()
-            st.dataframe(top_carriers)
-            st.plotly_chart(px.bar(top_carriers, x='carrier', y='on_time_deliveries', color='carrier'), use_container_width=True)
-
-        if {'reason', 'total_refund_amount'}.issubset(df.columns):
-            st.subheader("💸 Top 5 Return Reason Analysis")
-            top_refunds = df.groupby('reason')['total_refund_amount'].sum().nlargest(5).reset_index()
-            st.dataframe(top_refunds)
-            st.plotly_chart(px.pie(top_refunds, names='reason', values='total_refund_amount'), use_container_width=True)
-
+        df = pd.read_csv("refunds.csv")  # Replace with your actual file path
+    
+        # Ensure required columns exist
+        if {'reason', 'refund_amount'}.issubset(df.columns):
+            # Clean and convert refund_amount
+            df = df.dropna(subset=['reason', 'refund_amount'])
+            df['refund_amount'] = pd.to_numeric(df['refund_amount'], errors='coerce')
+            df = df.dropna(subset=['refund_amount'])
+    
+            # Group and summarize top 5 reasons
+            top_reasons = df.groupby('reason')['refund_amount'].sum().sort_values(ascending=False).head(5).reset_index()
+    
+            # Plot
+            fig = px.bar(top_reasons, x='reason', y='refund_amount', color='reason',
+                         title="Top 5 Return Reasons by Total Refund Amount", height=400)
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning("The file must contain 'reason' and 'refund_amount' columns.")
+    
+    except FileNotFoundError:
+        st.error("🚫 File 'refunds.csv' not found. Please check the file path.")
     except Exception as e:
-        st.error(f"Failed to load business metrics: {e}")
+        st.error(f"❌ Error reading file: {e}")
+    # METRICS_URL = "https://raw.githubusercontent.com/Harshapendli/streamlit-visualization/main/business_metrics.csv"
+
+    # @st.cache_data
+    # def load_metrics(url):
+    #     return pd.read_csv(url)
+
+    # try:
+    #     df = load_metrics(METRICS_URL)
+
+    #     if {'customer_id', 'customer_name', 'total_spent'}.issubset(df.columns):
+    #         st.subheader("🏅 Top 5 Customers by Total Spend")
+    #         top_customers = df.groupby(['customer_id', 'customer_name'])['total_spent'].sum().nlargest(5).reset_index()
+    #         st.dataframe(top_customers)
+    #         st.plotly_chart(px.bar(top_customers, x='customer_name', y='total_spent', color='customer_name'), use_container_width=True)
+
+    #     if {'product_id', 'product_name', 'total_revenue'}.issubset(df.columns):
+    #         st.subheader("🛍️ Top 5 Products by Revenue")
+    #         top_products = df.groupby(['product_id', 'product_name'])['total_revenue'].sum().nlargest(5).reset_index()
+    #         st.dataframe(top_products)
+    #         st.plotly_chart(px.bar(top_products, x='product_name', y='total_revenue', color='product_name'), use_container_width=True)
+
+    #     if {'carrier', 'on_time_deliveries'}.issubset(df.columns):
+    #         st.subheader("🚚 Top 5 Shipping Carriers by On-Time Deliveries")
+    #         top_carriers = df.groupby('carrier')['on_time_deliveries'].sum().nlargest(5).reset_index()
+    #         st.dataframe(top_carriers)
+    #         st.plotly_chart(px.bar(top_carriers, x='carrier', y='on_time_deliveries', color='carrier'), use_container_width=True)
+
+    #     if {'reason', 'total_refund_amount'}.issubset(df.columns):
+    #         st.subheader("💸 Top 5 Return Reason Analysis")
+    #         top_refunds = df.groupby('reason')['total_refund_amount'].sum().nlargest(5).reset_index()
+    #         st.dataframe(top_refunds)
+    #         st.plotly_chart(px.pie(top_refunds, names='reason', values='total_refund_amount'), use_container_width=True)
+
+    # except Exception as e:
+    #     st.error(f"Failed to load business metrics: {e}")
 
 # ---------------- Product Data Quality ----------------
 def show_data_quality_dashboard():
