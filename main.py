@@ -13,8 +13,8 @@ app.add_middleware(
 )
 
 # Load your cleaned data (replace with your path or logic)
-df_orders = pd.read_csv("data/orders_cleaned.csv")
-df_customers = pd.read_csv("data/customers_cleaned.csv")
+df_orders = pd.read_csv("incorrect_products.csv")
+df_customers = pd.read_csv("incorrect_products.csv")
 
 @app.get("/api/top_customers")
 def get_top_customers():
