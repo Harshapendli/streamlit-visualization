@@ -6,12 +6,16 @@ st.set_page_config(page_title="Product Data Quality Dashboard", layout="wide")
 
 st.title("📦 Product Data Quality Dashboard")
 
-# 🔗 URL to your GitHub raw CSV file
-GITHUB_CSV_URL = "https://github.com/Harshapendli/streamlit-visualization/blob/main/incorrect_products.csv"
+# ✅ Correct raw GitHub URL (must be raw.githubusercontent.com)
+GITHUB_CSV_URL = "https://raw.githubusercontent.com/Harshapendli/streamlit-visualization/main/incorrect_products.csv"
 
 @st.cache_data
 def load_data(url):
-    return pd.read_csv(url)
+    try:
+        return pd.read_csv(url, engine='python', on_bad_lines='warn')
+    except Exception as e:
+        st.stop()
+        st.error(f"Error reading CSV: {e}")
 
 try:
     df = load_data(GITHUB_CSV_URL)
@@ -81,4 +85,9 @@ try:
         st.info("No valid/invalid groups exceed 1% of the data.")
 
 except Exception as e:
-    st.error(f"Failed to load data from GitHub: {e}")
+    st.error(f"🚨 Failed to load data from GitHub: {e}")
+    st.markdown("""
+    - Please make sure the file exists and is accessible at the raw GitHub URL.
+    - Make sure the CSV is properly formatted (equal columns, quoted text).
+    - You can test by copying this link and opening it in your browser.
+    """)
