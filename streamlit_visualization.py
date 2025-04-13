@@ -10,67 +10,44 @@ st.set_page_config(page_title="Business Insights & Product Quality", layout="wid
 page = st.sidebar.radio("Go to", ["📈 Business Insights", "📦 Product Data Quality"])
 
 # ---------------- Business Insights ----------------
-st.set_page_config(page_title="Top 5 Return Reasons", layout="wide")
-
 def show_business_insights():
-    st.title("💸 Top 5 Return Reason Analysis")
-    
+    st.title("📈 Business Insights Report")
+
+    METRICS_URL = "https://raw.githubusercontent.com/Harshapendli/streamlit-visualization/main/business_metrics.csv"
+
+    @st.cache_data
+    def load_metrics(url):
+        return pd.read_csv(url)
+
     try:
-        df = pd.read_csv("valid_refunds.csv")  # Replace with your actual file path
+        df = load_metrics(METRICS_URL)
 
-        if {'reason', 'refund_amount'}.issubset(df.columns):
-            df = df.dropna(subset=['reason', 'refund_amount'])
-            df['refund_amount'] = pd.to_numeric(df['refund_amount'], errors='coerce')
-            df = df.dropna(subset=['refund_amount'])
+        if {'customer_id', 'customer_name', 'total_spent'}.issubset(df.columns):
+            st.subheader("🏅 Top 5 Customers by Total Spend")
+            top_customers = df.groupby(['customer_id', 'customer_name'])['total_spent'].sum().nlargest(5).reset_index()
+            st.dataframe(top_customers)
+            st.plotly_chart(px.bar(top_customers, x='customer_name', y='total_spent', color='customer_name'), use_container_width=True)
 
-            top_reasons = df.groupby('reason')['refund_amount'].sum().sort_values(ascending=False).head(5).reset_index()
+        if {'product_id', 'product_name', 'total_revenue'}.issubset(df.columns):
+            st.subheader("🛍 Top 5 Products by Revenue")
+            top_products = df.groupby(['product_id', 'product_name'])['total_revenue'].sum().nlargest(5).reset_index()
+            st.dataframe(top_products)
+            st.plotly_chart(px.bar(top_products, x='product_name', y='total_revenue', color='product_name'), use_container_width=True)
 
-            fig = px.bar(top_reasons, x='reason', y='refund_amount', color='reason',
-                         title="Top 5 Return Reasons by Total Refund Amount", height=400)
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.warning("The file must contain 'reason' and 'refund_amount' columns.")
+        if {'carrier', 'on_time_deliveries'}.issubset(df.columns):
+            st.subheader("🚚 Top 5 Shipping Carriers by On-Time Deliveries")
+            top_carriers = df.groupby('carrier')['on_time_deliveries'].sum().nlargest(5).reset_index()
+            st.dataframe(top_carriers)
+            st.plotly_chart(px.bar(top_carriers, x='carrier', y='on_time_deliveries', color='carrier'), use_container_width=True)
 
-    except FileNotFoundError:
-        st.error("🚫 File 'valid_refunds.csv' not found. Please check the file path.")
+        if {'reason', 'total_refund_amount'}.issubset(df.columns):
+            st.subheader("💸 Top 5 Return Reason Analysis")
+            top_refunds = df.groupby('reason')['total_refund_amount'].sum().nlargest(5).reset_index()
+            st.dataframe(top_refunds)
+            st.plotly_chart(px.pie(top_refunds, names='reason', values='total_refund_amount'), use_container_width=True)
+
     except Exception as e:
-        st.error(f"❌ Error reading file: {e}")
-
-    # METRICS_URL = "https://raw.githubusercontent.com/Harshapendli/streamlit-visualization/main/business_metrics.csv"
-
-    # @st.cache_data
-    # def load_metrics(url):
-    #     return pd.read_csv(url)
-
-    # try:
-    #     df = load_metrics(METRICS_URL)
-
-    #     if {'customer_id', 'customer_name', 'total_spent'}.issubset(df.columns):
-    #         st.subheader("🏅 Top 5 Customers by Total Spend")
-    #         top_customers = df.groupby(['customer_id', 'customer_name'])['total_spent'].sum().nlargest(5).reset_index()
-    #         st.dataframe(top_customers)
-    #         st.plotly_chart(px.bar(top_customers, x='customer_name', y='total_spent', color='customer_name'), use_container_width=True)
-
-    #     if {'product_id', 'product_name', 'total_revenue'}.issubset(df.columns):
-    #         st.subheader("🛍️ Top 5 Products by Revenue")
-    #         top_products = df.groupby(['product_id', 'product_name'])['total_revenue'].sum().nlargest(5).reset_index()
-    #         st.dataframe(top_products)
-    #         st.plotly_chart(px.bar(top_products, x='product_name', y='total_revenue', color='product_name'), use_container_width=True)
-
-    #     if {'carrier', 'on_time_deliveries'}.issubset(df.columns):
-    #         st.subheader("🚚 Top 5 Shipping Carriers by On-Time Deliveries")
-    #         top_carriers = df.groupby('carrier')['on_time_deliveries'].sum().nlargest(5).reset_index()
-    #         st.dataframe(top_carriers)
-    #         st.plotly_chart(px.bar(top_carriers, x='carrier', y='on_time_deliveries', color='carrier'), use_container_width=True)
-
-    #     if {'reason', 'total_refund_amount'}.issubset(df.columns):
-    #         st.subheader("💸 Top 5 Return Reason Analysis")
-    #         top_refunds = df.groupby('reason')['total_refund_amount'].sum().nlargest(5).reset_index()
-    #         st.dataframe(top_refunds)
-    #         st.plotly_chart(px.pie(top_refunds, names='reason', values='total_refund_amount'), use_container_width=True)
-
-    # except Exception as e:
-    #     st.error(f"Failed to load business metrics: {e}")
+        st.error(f"Failed to load business metrics: {e}")
 
 # ---------------- Product Data Quality ----------------
 def show_data_quality_dashboard():
@@ -99,7 +76,7 @@ def show_data_quality_dashboard():
         if not val_counts.empty:
             val_counts['Count'] = (val_counts['Proportion'] * total_rows).round().astype(int)
             fig1 = px.bar(val_counts, x='Validation Reason', y='Count', color='Validation Reason',
-                          title='Validation Issues', height=400)
+                          title='Validation Issues (>1% of records)', height=400)
             st.plotly_chart(fig1, use_container_width=True)
         else:
             st.info("No validation issues exceed 1% threshold.")
@@ -130,14 +107,12 @@ def show_data_quality_dashboard():
         else:
             st.success("No missing values found.")
 
-        # 🔍 Word Map Visualization for Invalid Categories ONLY
-        st.subheader("🧾 Word Map: Invalid Categories Only")
+        # 🔍 Word Map Visualization for Invalid Categories
+        st.subheader("🧾 Invalid Products by Category (Word Map)")
 
-        # Filter rows with "Invalid category" reason only
-        valid_Categories = ["Electronics", "Furniture", "Clothing", "Beauty", "Sports"];
-        invalid_cat_df = df[~df['category'].isin(valid_Categories)]
-        invalid_cat_counts = invalid_cat_df['category'].value_counts()
-        category_freq = invalid_cat_counts.to_dict()
+        invalid_df = df[df['validation_reason'].notnull()]
+        invalid_counts = invalid_df['category'].value_counts()
+        category_freq = invalid_counts.to_dict()
 
         if category_freq:
             wc = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(category_freq)
@@ -146,7 +121,7 @@ def show_data_quality_dashboard():
             ax.axis("off")
             st.pyplot(fig)
         else:
-            st.info("No invalid categories found to generate word map.")
+            st.info("No invalid products to display in word map.")
 
         # ✅ Raw Data Preview moved to the end
         st.subheader("📄 Raw Data Preview")
