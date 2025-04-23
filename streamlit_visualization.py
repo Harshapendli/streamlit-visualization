@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Business Insights & Product Quality", layout="wide")
 
-# Sidebar navigation page
+# Sidebar navigation
 page = st.sidebar.radio("Go to", ["📈 Business Insights", "📦 Product Data Quality"])
 
 # ---------------- Business Insights ----------------
@@ -44,9 +44,7 @@ def show_business_insights():
             st.subheader("💸 Top 5 Return Reason Analysis")
             top_refunds = df.groupby('reason')['total_refund_amount'].sum().nlargest(5).reset_index()
             st.dataframe(top_refunds)
-            # Convert pie chart to donut chart
-            fig = px.pie(top_refunds, names='reason', values='total_refund_amount', hole=0.4)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(px.pie(top_refunds, names='reason', values='total_refund_amount'), use_container_width=True)
 
     except Exception as e:
         st.error(f"Failed to load business metrics: {e}")
@@ -90,7 +88,6 @@ def show_data_quality_dashboard():
 
         if not cat_counts.empty:
             cat_counts['Count'] = (cat_counts['Proportion'] * total_rows).round().astype(int)
-            # Convert pie chart to donut chart
             fig2 = px.pie(cat_counts, names='Category', values='Count', title='Product Category', hole=0.4)
             st.plotly_chart(fig2, use_container_width=True)
         else:
@@ -134,9 +131,9 @@ def show_data_quality_dashboard():
         st.error(f"🚨 Failed to load data from GitHub: {e}")
         st.markdown(
             """
-            - Please make sure the file exists and is accessible at the raw GitHub URL. 
-            - Make sure the CSV is properly formatted (equal columns, quoted text). 
-            - You can test by copying this link and opening it in your browser.
+            - Please make sure the file exists and is accessible at the raw GitHub URL.  
+            - Make sure the CSV is properly formatted (equal columns, quoted text).  
+            - You can test by copying this link and opening it in your browser.  
             """
         )
 
